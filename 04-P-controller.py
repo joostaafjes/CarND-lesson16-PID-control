@@ -110,7 +110,8 @@ def run(robot, tau, n=100, speed=1.0):
     y_trajectory = []
 
     for step in range(n):
-        steering = -tau * robot.y;
+        crossback_error = robot.y
+        steering = -tau * crossback_error
         robot.move(steering, speed)
         x_trajectory.append(robot.x)
         y_trajectory.append(robot.y)
