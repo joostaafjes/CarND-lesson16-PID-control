@@ -125,7 +125,7 @@ def run(robot, tau_p, tau_d, n=100, speed=1.0):
     x_trajectory = []
     y_trajectory = []
 
-    cte_prev = 0
+    cte_prev =robot.y
     for i in range(n):
         cte = robot.y
         cte_diff = cte - cte_prev
