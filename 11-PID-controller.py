@@ -1,22 +1,22 @@
 # -----------
 # User Instructions
 #
-# Implement a PD controller by running 100 iterations
+# Implement a P controller by running 100 iterations
 # of robot motion. The steering angle should be set
-# by the parameter tau_p and tau_d so that:
+# by the parameter tau so that:
 #
-# steering = -tau_p * CTE - tau_d * diff_CTE
-# where differential crosstrack error (diff_CTE)
-# is given by CTE(t) - CTE(t-1)
+# steering = -tau_p * CTE - tau_d * diff_CTE - tau_i * int_CTE
 #
+# where the integrated crosstrack error (int_CTE) is
+# the sum of all the previous crosstrack errors.
+# This term works to cancel out steering drift.
 #
-# Only modify code at the bottom! Look for the TODO
+# Only modify code at the bottom! Look for the TODO.
 # ------------
 
 import random
 import numpy as np
 import matplotlib.pyplot as plt
-
 
 # ------------------------------------------------
 #
@@ -98,39 +98,26 @@ class Robot(object):
     def __repr__(self):
         return '[x=%.5f y=%.5f orient=%.5f]' % (self.x, self.y, self.orientation)
 
-
 ############## ADD / MODIFY CODE BELOW ####################
 # ------------------------------------------------------------------------
 #
 # run - does a single control run
 
-# previous P controller
-def run_p(robot, tau, n=100, speed=1.0):
-    x_trajectory = []
-    y_trajectory = []
-    for i in range(n):
-        cte = robot.y
-        steer = -tau * cte
-        robot.move(steer, speed)
-        x_trajectory.append(robot.x)
-        y_trajectory.append(robot.y)
-    return x_trajectory, y_trajectory
-
-
 robot = Robot()
 robot.set(0, 1, 0)
-# add drift
-#robot.set_steering_drift(10.0/ 180.0 * np.pi)
 
-def run(robot, tau_p, tau_d, n=100, speed=1.0):
+
+def run(robot, tau_p, tau_d, tau_i, n=100, speed=1.0):
     x_trajectory = []
     y_trajectory = []
 
     cte_prev =robot.y
+    cte_sum = 0
     for i in range(n):
         cte = robot.y
         cte_diff = cte - cte_prev
-        steer = -tau_p * cte - tau_d * cte_diff
+        cte_sum += cte
+        steer = -tau_p * cte - tau_d * cte_diff - tau_i * cte_sum
         cte_prev = cte
         robot.move(steer, speed)
         x_trajectory.append(robot.x)
@@ -139,9 +126,9 @@ def run(robot, tau_p, tau_d, n=100, speed=1.0):
     return x_trajectory, y_trajectory
 
 
-x_trajectory, y_trajectory = run(robot, 0.2, 3.0)
+x_trajectory, y_trajectory = run(robot, 0.2, 3.0, 0.004)
 n = len(x_trajectory)
 
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 8))
-ax1.plot(x_trajectory, y_trajectory, 'g', label='PD controller')
+fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8,8))
+ax1.plot(x_trajectory, y_trajectory, 'g', label='PID controller')
 ax1.plot(x_trajectory, np.zeros(n), 'r', label='reference')
